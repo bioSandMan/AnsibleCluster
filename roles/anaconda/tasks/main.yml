@@ -1,0 +1,11 @@
+---
+- name: download Anaconda3
+  get_url:
+    url: "{{ anaconda_url }}"
+    dest: /tmp
+    mode: 0755
+  when: init_server|default(false) == "true"
+
+- name: Install Anaconda for all users
+  script: /tmp/{{ anaconda }} -b -p /opt/anaconda
+  when: init_server|default(false) == "true"

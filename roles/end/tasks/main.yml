@@ -1,0 +1,8 @@
+---
+- name: Restart server
+  command: /sbin/shutdown -r +1
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: init_server|default(false) == "true"
+

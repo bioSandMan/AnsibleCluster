@@ -1,0 +1,14 @@
+---
+# wget https://www.apache.org/dist/cassandra/redhat/311x/cassandra-3.11.0-1.noarch.rpm
+  - name: Download Apache Cassandra
+    get_url: 
+      url: "{{ cassandra_url }}"
+      dest: /tmp/{{ cassandra_rpm }}
+    when: init_server|default(false) == "true"
+
+
+  - name: Install package.
+    yum:
+       name: /tmp/{{ cassandra_rpm }}
+       state: present
+    when: init_server|default(false) == "true"

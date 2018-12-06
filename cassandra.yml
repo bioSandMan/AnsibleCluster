@@ -1,0 +1,29 @@
+---
+# Create/configure Cassandra/Spark cluster
+# ==============================================
+#
+# To create a new empty cluster: 
+# ansible-playbook -i <inventory> --extra-vars="init_server=true" cassandra.yml 
+#
+# To start spark slaves
+# First, make sure spark master is running on master node with
+# sudo /opt/spark/sbin/start-master.sh
+# Then
+# ansible-playbook -i <inventory> --extra-vars="start_slaves=true" cassandra.yml 
+#
+# To stop spark slaves
+# ansible-playbook -i <inventory> --extra-vars="stop_slaves=true" cassandra.yml 
+#
+# To update configuration files
+# ansible-playbook -i <inventory> --extra-vars="update_config=true" cassandra.yml
+
+- hosts: worker_nodes
+  roles:
+    - base
+    - java
+    - ntp
+    - cassandra
+    - hadoop
+    - spark
+    - configCassandra
+    - end

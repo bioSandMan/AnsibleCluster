@@ -1,0 +1,68 @@
+---
+  ###########################
+  # Packages 
+  ###########################
+  - name: Install latest updates
+    yum: 
+      name: '*' 
+      state: latest
+    when: init_server|default(false) == "true"
+
+  - name: Specify only future security updates
+    yum:
+      name: yum-plugin-security
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Install extras
+    yum:
+      name: epel-release
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Install Vim
+    yum:
+      name: vim
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Install time sync protocol
+    yum:
+      name: ntp
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Install collectd
+    yum:
+      name: collectd
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Install bzip2
+    yum:
+      name: bzip2
+      state: present
+    when: init_server|default(false) == "true"
+
+  - name: Purge yum cache
+    command: yum clean all
+    when: init_server|default(false) == "true"
+
+ ############################
+ # Services
+ ############################
+  - name: Disable firewalld
+    service: 
+      name: firewalld  
+      state: stopped 
+      enabled: no
+    ignore_errors: yes
+    when: init_server|default(false) == "true"
+
+
+############################
+# Custom scripts
+############################
+  - name: Template custom login additions
+    template: "src=custom.sh.j2 dest=/etc/profile.d/custom.sh mode=0644"
+    when: (init_server|default(false) == "true") or (update_config|default(false) == "true")

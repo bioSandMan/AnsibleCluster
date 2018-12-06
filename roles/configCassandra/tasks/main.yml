@@ -1,0 +1,65 @@
+---
+
+- name: Remove cluster metadata
+  shell: rm -rf /var/lib/cassandra/*
+  when: init_server|default(false) == "true"
+
+- name: Create data directory
+  file: path={{ data_dir }}/cassandra/data state=directory owner=cassandra group=cassandra mode=0755
+  when: init_server|default(false) == "true"
+
+- name: Create commitlog directory
+  file: path={{ data_dir }}/cassandra/commitlog state=directory owner=cassandra group=cassandra mode=0755
+  when: init_server|default(false) == "true"
+
+- name: Create saved_caches directory
+  file: path={{ data_dir }}/cassandra/saved_caches state=directory owner=cassandra group=cassandra mode=0755
+  when: init_server|default(false) == "true"
+
+- name: Create commitlog backup directory
+  file: path={{ data_dir }}/cassandra/commit_log_backup state=directory owner=cassandra group=cassandra mode=0755
+  when: init_server|default(false) == "true"
+
+- name: Create hints directory
+  file: path={{ data_dir }}/cassandra/hints state=directory owner=cassandra group=cassandra mode=0755
+  when: init_server|default(false) == "true"
+
+- name: Backup original cassandra.yaml
+  command: "cp {{ cassandra_config_dir }}/cassandra.yaml {{ cassandra_config_dir }}/cassandra.yaml.orig.{{ cassandra_version }} creates={{ cassandra_config_dir }}/cassandra.yaml.orig.{{ cassandra_version }}"
+  when: init_server|default(false) == "true"
+
+- name: Backup original cassandra-topology.properties
+  command: "cp {{ cassandra_config_dir }}/cassandra-topology.properties {{ cassandra_config_dir }}/cassandra-topology.properties.orig.{{ cassandra_version }} creates={{ cassandra_config_dir }}/cassandra-topology.properties.orig.{{ cassandra_version }}"
+  when: init_server|default(false) == "true"
+
+- name: Template cassandra.yml
+  template: "src=cassandra.yaml.j2 dest={{ cassandra_config_dir }}/cassandra.yaml mode=0664"
+  when: (init_server|default(false) == "true") or (update_config|default(false) == "true")
+
+- name: Template cassandra-topology.properties
+  template: "src=cassandra-topology.properties.j2 dest={{ cassandra_config_dir }}/cassandra-topology.properties mode=0664"
+  when: (init_server|default(false) == "true") or (update_config|default(false) == "true")
+
+- name: Enable performance tweaks
+  script: performance_tweaks.sh
+  when: init_server|default(false) == "true"
+
+- name: Disable auto_bootstrap for empty cluster
+  command: "sed -i -e '/#auto_boostrap/s/#auto_boostrap/auto_boostrap/' {{ cassandra_config_dir }}/cassandra.yaml"
+  when: init_server|default(false) == "true"
+
+- name: Enable Cassandra service
+  service: name=cassandra enabled=yes
+  when: (init_server|default(false) == "true") or (update_config|default(false) == "true")
+
+- name: Cassandra startup
+  service: name=cassandra state=restarted
+  when: (init_server|default(false) == "true") or (update_config|default(false) == "true")
+
+- name: Wait for Cassandra startup (not bootstrapping)
+  pause: seconds=90
+  when: init_server|default(false) == "true"
+
+- name: Re-enable auto_bootstrap for empty cluster
+  command: "sed -i -e '/auto_boostrap/s/auto_boostrap/#auto_boostrap/' {{ cassandra_config_dir }}/cassandra.yaml"
+  when: init_server|default(false) == "true"

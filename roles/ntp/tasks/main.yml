@@ -1,0 +1,18 @@
+---
+- name: Stop ntpd
+  service: 
+    name: ntpd
+    state: stopped
+  when: init_server|default(false) == "true"
+   
+- name: Sync ntp
+  command: 'ntpdate pool.ntp.org'
+  when: init_server|default(false) == "true"
+
+- name: restart ntpd
+  service: name=ntpd state=restarted
+  when: init_server|default(false) == "true"
+
+- name: Ensure that ntpd is running
+  service: name=ntpd state=started enabled=yes
+  when: init_server|default(false) == "true"

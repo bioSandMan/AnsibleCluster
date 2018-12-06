@@ -1,0 +1,23 @@
+---
+  - name: Download Spark
+    unarchive: 
+      src: "{{ spark_url }}"
+      dest: /opt
+      remote_src: True
+    when: init_server|default(false) == "true"
+
+  - name: Template spark-env.sh
+    template: "src=spark-env.sh.j2 dest=/opt/{{ spark }}/conf/spark-env.sh mode=0664"
+    when: (init_server|default(false) == "true") or (update_config|default(false) == "true")
+
+  - name: Start Spark-slave
+    shell: /opt/{{ spark }}/sbin/start-slave.sh spark://{{ master }}:7077
+    when: start_slaves|default(false) == "true"
+
+  - name: Stop Spark-slave
+    shell: /opt/{{ spark }}/sbin/stop-slave.sh spark://{{ master }}:7077
+    when: stop_slaves|default(false) == "true"
+
+  - user:
+      name: spark
+    when: init_server|default(false) == "true"
